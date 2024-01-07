@@ -58,16 +58,16 @@ players_for_team = cursor.execute('SELECT player_name FROM players WHERE team_na
 players_for_team = [player[0] for player in players_for_team]
 
 # Checkbox list for player selection
-selected_players = st.multiselect("Select Players:", players_for_team)
+selected_players = st.multiselect("Valitse laskijat:", players_for_team)
 
 # Select training day
-training_day = st.date_input("Select Training Day:")
+training_day = st.date_input("Valitse treenipäivä:")
 
 # Save button for participant registration
-if st.button("Register Participants"):
+if st.button("Lisää treenikerta"):
     for player in selected_players:
         insert_participant_data(player, selected_team, training_day.strftime("%Y-%m-%d"))
-    st.success("Participants registered successfully!")
+    st.success("Tiedot rekisteröity onnistuneesti!")
 
 # Close the database connection
 conn.close()
