@@ -48,15 +48,6 @@ def insert_participant_data(player_name, team_name, training_day):
     ''', (player_name, team_name, training_day))
     conn.commit()
 
-# Get user input for player registration
-player_name_input = st.text_input("Enter player name:")
-team_name_input = st.text_input("Enter team name:")
-
-# Register new player
-if st.button("Register Player"):
-    insert_player_data(player_name_input, team_name_input)
-    st.success(f"Player {player_name_input} registered successfully for team {team_name_input}!")
-
 # Display the player list for each team
 teams = cursor.execute('SELECT DISTINCT team_name FROM players').fetchall()
 teams = [team[0] for team in teams]  # Extracting team names from tuples
