@@ -51,7 +51,7 @@ def insert_participant_data(player_name, team_name, training_day):
 # Display the player list for each team
 teams = cursor.execute('SELECT DISTINCT team_name FROM players').fetchall()
 teams = [team[0] for team in teams]  # Extracting team names from tuples
-selected_team = st.selectbox("Select Team:", teams)
+selected_team = st.selectbox("Valitse valmennusryhmä tai valmentajat:", teams)
 
 # Get player names for the selected team
 players_for_team = cursor.execute('SELECT player_name FROM players WHERE team_name = ?', (selected_team,)).fetchall()
