@@ -32,7 +32,7 @@ cursor.execute('''
 conn.commit()
 
 # Streamlit app
-st.title("Training Scheduler App")
+st.title("Syötä treenikäynnit tällä sivulla.")
 
 # Function to insert player data into the players table
 def insert_player_data(player_name, team_name):
