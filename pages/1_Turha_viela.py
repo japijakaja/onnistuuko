@@ -1,56 +1,81 @@
-# Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022)
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# -*- coding: utf-8 -*-
 
-import time
-
-import numpy as np
 
 import streamlit as st
-from streamlit.hello.utils import show_code
+import sqlite3
+from datetime import datetime
 
+# Connect to SQLite database
+conn = sqlite3.connect("training_database.db", check_same_thread=False)
+cursor = conn.cursor()
 
-def plotting_demo():
-    progress_bar = st.sidebar.progress(0)
-    status_text = st.sidebar.empty()
-    last_rows = np.random.randn(1, 1)
-    chart = st.line_chart(last_rows)
+# Create players table if not exists
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS players (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        player_name TEXT,
+        team_name TEXT
+    )
+''')
+conn.commit()
 
-    for i in range(1, 101):
-        new_rows = last_rows[-1, :] + np.random.randn(5, 1).cumsum(axis=0)
-        status_text.text("%i%% Complete" % i)
-        chart.add_rows(new_rows)
-        progress_bar.progress(i)
-        last_rows = new_rows
-        time.sleep(0.05)
+# Create participants table if not exists
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS participants (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        player_name TEXT,
+        team_name TEXT,
+        training_day TEXT
+    )
+''')
+conn.commit()
 
-    progress_bar.empty()
+# Streamlit app
+st.title("Training Scheduler App")
 
-    # Streamlit widgets automatically run the script from top to bottom. Since
-    # this button is not connected to any other logic, it just causes a plain
-    # rerun.
-    st.button("Re-run")
+# Function to insert player data into the players table
+def insert_player_data(player_name, team_name):
+    cursor.execute('''
+        INSERT INTO players (player_name, team_name) VALUES (?, ?)
+    ''', (player_name, team_name))
+    conn.commit()
 
+# Function to insert participant data into the participants table
+def insert_participant_data(player_name, team_name, training_day):
+    cursor.execute('''
+        INSERT INTO participants (player_name, team_name, training_day) VALUES (?, ?, ?)
+    ''', (player_name, team_name, training_day))
+    conn.commit()
 
-st.set_page_config(page_title="Plotting Demo", page_icon="📈")
-st.markdown("# Plotting Demo")
-st.sidebar.header("Plotting Demo")
-st.write(
-    """This demo illustrates a combination of plotting and animation with
-Streamlit. We're generating a bunch of random numbers in a loop for around
-5 seconds. Enjoy!"""
-)
+# Get user input for player registration
+player_name_input = st.text_input("Enter player name:")
+team_name_input = st.text_input("Enter team name:")
 
-plotting_demo()
+# Register new player
+if st.button("Register Player"):
+    insert_player_data(player_name_input, team_name_input)
+    st.success(f"Player {player_name_input} registered successfully for team {team_name_input}!")
 
-show_code(plotting_demo)
+# Display the player list for each team
+teams = cursor.execute('SELECT DISTINCT team_name FROM players').fetchall()
+teams = [team[0] for team in teams]  # Extracting team names from tuples
+selected_team = st.selectbox("Select Team:", teams)
+
+# Get player names for the selected team
+players_for_team = cursor.execute('SELECT player_name FROM players WHERE team_name = ?', (selected_team,)).fetchall()
+players_for_team = [player[0] for player in players_for_team]
+
+# Checkbox list for player selection
+selected_players = st.multiselect("Select Players:", players_for_team)
+
+# Select training day
+training_day = st.date_input("Select Training Day:")
+
+# Save button for participant registration
+if st.button("Register Participants"):
+    for player in selected_players:
+        insert_participant_data(player, selected_team, training_day.strftime("%Y-%m-%d"))
+    st.success("Participants registered successfully!")
+
+# Close the database connection
+conn.close()
