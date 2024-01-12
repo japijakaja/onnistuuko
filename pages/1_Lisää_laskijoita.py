@@ -67,7 +67,8 @@ players_df = pd.read_sql_query(query, conn, coerce_float=False)
 # Display the DataFrame in Streamlit
 st.divider()
 st.subheader("Tähän mennessä lisätyt laskijat ja valmentajat:")
-st.dataframe(players_df)
+#st.dataframe(players_df)
+st.data_editor(players_df, num_rows= "dynamic")
 
 
 # Close the database connection
